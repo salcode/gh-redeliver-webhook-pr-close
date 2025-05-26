@@ -60,9 +60,7 @@ for DELIVERY_ID in $DELIVERY_IDS; do
 		if [[ "--dry-run" == "$2" ]]; then
 			echo "Dry run mode, no delivery made";
 		else
-			# Send the delivery.
-			echo "Sent";
-			# gh api --method POST "/repos/{owner}/{repo}/hooks/$WEBHOOK_ID/deliveries/$DELIVERY_ID/attempts";
+			gh api --method POST "/repos/{owner}/{repo}/hooks/$WEBHOOK_ID/deliveries/$DELIVERY_ID/attempts";
 		fi
 		SENT=1;
 		continue

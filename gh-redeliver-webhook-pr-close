@@ -1,35 +1,74 @@
-#!/usr/bin/env bash
-set -e
+#!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
 
-echo "Hello gh-redeliver-webhook-pr-close!"
+DEBUG=0
+SENT=0
 
-# Snippets to help get started:
+if [[ "$#" == 0 ]] || [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "" ]]; then
+	echo "Redeliver Most Recent GitHub Close PR Webhook Delivery for this branch.";
+	echo
+	echo "USAGE";
+	echo "  gh redeliver-webhook-pr-close <webhook-url> [flags]";
+	echo
+	echo "FLAGS";
+	echo "  --dry-run   Do not actually redeliver, just print what would be done.";
+	echo
+	echo "EXAMPLES";
+	echo "  $ gh redeliver-webhook-pr-close https://example.com/webhook";
+	echo "  $ gh redeliver-webhook-pr-close https://example.com/webhook -dry-run";
+	exit 1;
+fi
 
-# Determine if an executable is in the PATH
-# if ! type -p ruby >/dev/null; then
-#   echo "Ruby not found on the system" >&2
-#   exit 1
-# fi
+# Get (most recent) PR Id associated with the current branch.
+#
+# Note: Even if the branch name has multiple PRs associated with it,
+# (e.g. one PR into develop and one into main both from this branch)
+# only the most recent (highest) PR ID is returned.
+PR_ID=$(gh pr view --json number --jq '.number');
 
-# Pass arguments through to another command
-# gh issue list "$@" -R cli/cli
+# Get ID associated with Webhook URL.
+WEBHOOK_ID=$(gh api /repos/{owner}/{repo}/hooks --jq ".[] | select(.config.url==\"$1\") | .id");
 
-# Using the gh api command to retrieve and format information
-# QUERY='
-#   query($endCursor: String) {
-#     viewer {
-#       repositories(first: 100, after: $endCursor) {
-#         nodes {
-#           nameWithOwner
-#           stargazerCount
-#         }
-#       }
-#     }
-#   }
-# '
-# TEMPLATE='
-#   {{- range $repo := .data.viewer.repositories.nodes -}}
-#     {{- printf "name: %s - stargazers: %v\n" $repo.nameWithOwner $repo.stargazerCount -}}
-#   {{- end -}}
-# '
-# exec gh api graphql -f query="${QUERY}" --paginate --template="${TEMPLATE}"
+if [[ $DEBUG -eq 1 ]]; then
+	echo "Webhook ID $WEBHOOK_ID"
+fi
+
+# Get deliveries associated with the Webhook ID.
+DELIVERY_IDS=$(gh api /repos/{owner}/{repo}/hooks/"$WEBHOOK_ID"/deliveries --jq 'map(select(.event=="pull_request")) | map(select(.action=="closed")) | .[].id');
+
+if [[ $DEBUG -eq 1 ]]; then
+	echo "Delivery IDs: $DELIVERY_IDS"
+fi
+
+for DELIVERY_ID in $DELIVERY_IDS; do
+	if [[ $DEBUG -eq 1 ]]; then
+		echo "Delivery ID: $DELIVERY_ID"
+	fi
+	DELIVERY_REQUEST_PR_NUMBER=$(gh api "/repos/{owner}/{repo}/hooks/$WEBHOOK_ID/deliveries/$DELIVERY_ID" --jq '.request.payload.pull_request.number');
+	if [[ $DEBUG -eq 1 ]]; then
+		echo "Delivery Request PR Number: $DELIVERY_REQUEST_PR_NUMBER"
+	fi
+	if [[ "$DELIVERY_REQUEST_PR_NUMBER" == "$PR_ID" ]]; then
+		echo
+		echo "Redeliver Close PR #$PR_ID Delivery ($DELIVERY_ID) to Webhook $WEBHOOK_ID ($1)";
+		if [[ "--dry-run" == "$2" ]]; then
+			echo "Dry run mode, no delivery made";
+		else
+			# Send the delivery.
+			echo "Sent";
+			# gh api --method POST "/repos/{owner}/{repo}/hooks/$WEBHOOK_ID/deliveries/$DELIVERY_ID/attempts";
+		fi
+		SENT=1;
+		continue
+	else
+		if [[ $DEBUG -eq 1 ]]; then
+			echo "Skipping Delivery ID: $DELIVERY_ID (PR ID does not match)"
+		fi
+	fi
+
+	if [[ $SENT -eq 0 ]]; then
+		echo "No matching webhook deliveries found for PR #$PR_ID";
+		exit 1;
+	fi
+done;

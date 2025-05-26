@@ -16,7 +16,7 @@ if [[ "$#" == 0 ]] || [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]] || [[ "$1" ==
 	echo
 	echo "EXAMPLES";
 	echo "  $ gh redeliver-webhook-pr-close https://example.com/webhook";
-	echo "  $ gh redeliver-webhook-pr-close https://example.com/webhook -dry-run";
+	echo "  $ gh redeliver-webhook-pr-close https://example.com/webhook --dry-run";
 	exit 1;
 fi
 

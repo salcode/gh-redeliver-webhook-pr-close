@@ -69,9 +69,9 @@ for DELIVERY_ID in $DELIVERY_IDS; do
 			echo "Skipping Delivery ID: $DELIVERY_ID (PR ID does not match)"
 		fi
 	fi
-
-	if [[ $SENT -eq 0 ]]; then
-		echo "No matching webhook deliveries found for PR #$PR_ID";
-		exit 1;
-	fi
 done;
+
+if [[ $SENT -eq 0 ]]; then
+	echo "No matching webhook deliveries found for PR #$PR_ID";
+	exit 1;
+fi

@@ -1,6 +1,6 @@
 # gh-redeliver-webhook-pr-close
 
-Redeliver Most Recent GitHub Close PR Webhook Delivery for the current branch.
+[GitHub CLI extension](https://docs.github.com/en/github-cli/github-cli/using-github-cli-extensions) to redeliver the most recent GitHub close PR webhook delivery for the current branch.
 
 ## Usage
 
@@ -23,3 +23,10 @@ You can get a list of the webhook URLs for your repository by running:
 gh api "/repos/{owner}/{repo}/hooks" --jq '.[].config.url'
 ```
 
+### Installation
+
+After installing the [GitHub CLI](https://cli.github.com/), you can install this extension using the following command:
+
+```bash
+gh extension install salcode/gh-redeliver-webhook-pr-close
+```

@@ -28,7 +28,7 @@ fi
 PR_ID=$(gh pr view --json number --jq '.number');
 
 # Get ID associated with Webhook URL.
-WEBHOOK_ID=$(gh api /repos/{owner}/{repo}/hooks --jq ".[] | select(.config.url==\"$1\") | .id");
+WEBHOOK_ID=$(gh api "/repos/{owner}/{repo}/hooks" --jq ".[] | select(.config.url==\"$1\") | .id");
 
 if [[ $DEBUG -eq 1 ]]; then
 	echo "Webhook ID $WEBHOOK_ID"

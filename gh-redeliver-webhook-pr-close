@@ -5,18 +5,21 @@ IFS=$'\n\t'
 DEBUG=0
 SENT=0
 
+_help() {
+  cat << EOF
+
+Redeliver Most Recent GitHub Close PR Webhook Delivery for this branch.
+
+USAGE
+  gh redeliver-webhook-pr-close <webhook-url> [flags]
+
+FLAGS
+  --dry-run   Do not actually redeliver, just print what would be done.
+EOF
+}
+
 if [[ "$#" == 0 ]] || [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "" ]]; then
-	echo "Redeliver Most Recent GitHub Close PR Webhook Delivery for this branch.";
-	echo
-	echo "USAGE";
-	echo "  gh redeliver-webhook-pr-close <webhook-url> [flags]";
-	echo
-	echo "FLAGS";
-	echo "  --dry-run   Do not actually redeliver, just print what would be done.";
-	echo
-	echo "EXAMPLES";
-	echo "  $ gh redeliver-webhook-pr-close https://example.com/webhook";
-	echo "  $ gh redeliver-webhook-pr-close https://example.com/webhook --dry-run";
+  _help
 	exit 1;
 fi
 

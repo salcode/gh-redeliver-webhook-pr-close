@@ -19,7 +19,31 @@ EOF
 }
 
 main() {
-  if [[ "$#" == 0 ]] || [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "" ]]; then
+  local positional_args=""
+
+  while (( "$#" )); do
+    case "${1-}" in
+      --help|-h)
+        # flag --help or -h
+        _help
+        exit 1;
+        ;;
+      --dry-run|-dry-run)
+        # flag --dry-run
+        local dry_run=true
+        ;;
+      *)
+        # Not a flag nor parameter, must be positional argument.
+        positional_args="$positional_args '$1'"
+    esac
+    shift
+  done
+
+  # Update positional arguments to exclude options.
+  eval set -- "$positional_args"
+
+  if [[ "$#" == 0 ]]; then
+    # No position arguments given.
     _help
     exit 1;
   fi

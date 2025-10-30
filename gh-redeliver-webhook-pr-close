@@ -18,63 +18,67 @@ FLAGS
 EOF
 }
 
-if [[ "$#" == 0 ]] || [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "" ]]; then
-  _help
-	exit 1;
-fi
+main() {
+  if [[ "$#" == 0 ]] || [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]] || [[ "$1" == "" ]]; then
+    _help
+    exit 1;
+  fi
 
-# Get (most recent) PR Id associated with the current branch.
-#
-# Note: Even if the branch name has multiple PRs associated with it,
-# (e.g. one PR into develop and one into main both from this branch)
-# only the most recent (highest) PR ID is returned.
-PR_ID=$(gh pr view --json number --jq '.number');
+  # Get (most recent) PR Id associated with the current branch.
+  #
+  # Note: Even if the branch name has multiple PRs associated with it,
+  # (e.g. one PR into develop and one into main both from this branch)
+  # only the most recent (highest) PR ID is returned.
+  PR_ID=$(gh pr view --json number --jq '.number');
 
-# Get ID associated with Webhook URL.
-WEBHOOK_ID=$(gh api "/repos/{owner}/{repo}/hooks" --jq ".[] | select(.config.url==\"$1\") | .id");
+  # Get ID associated with Webhook URL.
+  WEBHOOK_ID=$(gh api "/repos/{owner}/{repo}/hooks" --jq ".[] | select(.config.url==\"$1\") | .id");
 
-if [[ -z "$WEBHOOK_ID" ]]; then
-	echo "No webhook found for URL $1";
-	exit 1;
-fi
+  if [[ -z "$WEBHOOK_ID" ]]; then
+    echo "No webhook found for URL $1";
+    exit 1;
+  fi
 
-if [[ $DEBUG -eq 1 ]]; then
-	echo "Webhook ID $WEBHOOK_ID"
-fi
+  if [[ $DEBUG -eq 1 ]]; then
+    echo "Webhook ID $WEBHOOK_ID"
+  fi
 
-# Get deliveries associated with the Webhook ID.
-DELIVERY_IDS=$(gh api /repos/{owner}/{repo}/hooks/"$WEBHOOK_ID"/deliveries --jq 'map(select(.event=="pull_request")) | map(select(.action=="closed")) | .[].id');
+  # Get deliveries associated with the Webhook ID.
+  DELIVERY_IDS=$(gh api /repos/{owner}/{repo}/hooks/"$WEBHOOK_ID"/deliveries --jq 'map(select(.event=="pull_request")) | map(select(.action=="closed")) | .[].id');
 
-if [[ $DEBUG -eq 1 ]]; then
-	echo "Delivery IDs: $DELIVERY_IDS"
-fi
+  if [[ $DEBUG -eq 1 ]]; then
+    echo "Delivery IDs: $DELIVERY_IDS"
+  fi
 
-for DELIVERY_ID in $DELIVERY_IDS; do
-	if [[ $DEBUG -eq 1 ]]; then
-		echo "Delivery ID: $DELIVERY_ID"
-	fi
-	DELIVERY_REQUEST_PR_NUMBER=$(gh api "/repos/{owner}/{repo}/hooks/$WEBHOOK_ID/deliveries/$DELIVERY_ID" --jq '.request.payload.pull_request.number');
-	if [[ $DEBUG -eq 1 ]]; then
-		echo "Delivery Request PR Number: $DELIVERY_REQUEST_PR_NUMBER"
-	fi
-	if [[ "$DELIVERY_REQUEST_PR_NUMBER" == "$PR_ID" ]]; then
-		echo
-		echo "Redeliver Close PR #$PR_ID Delivery ($DELIVERY_ID) to Webhook $WEBHOOK_ID ($1)";
-		if [[ "$#" == 2 ]] && [[ "--dry-run" == "$2" ]]; then
-			echo "Dry run mode, no delivery made";
-		else
-			gh api --method POST "/repos/{owner}/{repo}/hooks/$WEBHOOK_ID/deliveries/$DELIVERY_ID/attempts";
-		fi
-		SENT=1;
-		break
-	else
-		if [[ $DEBUG -eq 1 ]]; then
-			echo "Skipping Delivery ID: $DELIVERY_ID (PR ID does not match)"
-		fi
-	fi
-done;
+  for DELIVERY_ID in $DELIVERY_IDS; do
+    if [[ $DEBUG -eq 1 ]]; then
+      echo "Delivery ID: $DELIVERY_ID"
+    fi
+    DELIVERY_REQUEST_PR_NUMBER=$(gh api "/repos/{owner}/{repo}/hooks/$WEBHOOK_ID/deliveries/$DELIVERY_ID" --jq '.request.payload.pull_request.number');
+    if [[ $DEBUG -eq 1 ]]; then
+      echo "Delivery Request PR Number: $DELIVERY_REQUEST_PR_NUMBER"
+    fi
+    if [[ "$DELIVERY_REQUEST_PR_NUMBER" == "$PR_ID" ]]; then
+      echo
+      echo "Redeliver Close PR #$PR_ID Delivery ($DELIVERY_ID) to Webhook $WEBHOOK_ID ($1)";
+      if [[ "$#" == 2 ]] && [[ "--dry-run" == "$2" ]]; then
+        echo "Dry run mode, no delivery made";
+      else
+        gh api --method POST "/repos/{owner}/{repo}/hooks/$WEBHOOK_ID/deliveries/$DELIVERY_ID/attempts";
+      fi
+      SENT=1;
+      break
+    else
+      if [[ $DEBUG -eq 1 ]]; then
+        echo "Skipping Delivery ID: $DELIVERY_ID (PR ID does not match)"
+      fi
+    fi
+  done;
 
-if [[ $SENT -eq 0 ]]; then
-	echo "No matching webhook deliveries found for PR #$PR_ID";
-	exit 1;
-fi
+  if [[ $SENT -eq 0 ]]; then
+    echo "No matching webhook deliveries found for PR #$PR_ID";
+    exit 1;
+  fi
+}
+
+main "$@"

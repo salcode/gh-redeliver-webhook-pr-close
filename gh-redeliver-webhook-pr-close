@@ -23,6 +23,10 @@ main() {
     _help
     exit 1;
   fi
+  local dry_run
+  if [[ "$#" == 2 ]] && [[ "--dry-run" == "$2" ]]; then
+    dry_run=true
+  fi
 
   # Get (most recent) PR Id associated with the current branch.
   #
@@ -61,7 +65,7 @@ main() {
     if [[ "$DELIVERY_REQUEST_PR_NUMBER" == "$PR_ID" ]]; then
       echo
       echo "Redeliver Close PR #$PR_ID Delivery ($DELIVERY_ID) to Webhook $WEBHOOK_ID ($1)";
-      if [[ "$#" == 2 ]] && [[ "--dry-run" == "$2" ]]; then
+      if [ "${dry_run:-false}" = true ]; then
         echo "Dry run mode, no delivery made";
       else
         gh api --method POST "/repos/{owner}/{repo}/hooks/$WEBHOOK_ID/deliveries/$DELIVERY_ID/attempts";

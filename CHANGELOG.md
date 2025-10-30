@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## [0.1.2] - 2025-05-26
 - Add check to avoid `line 60: $2: unbound variable` error
 

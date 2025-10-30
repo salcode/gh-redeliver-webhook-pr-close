@@ -47,10 +47,6 @@ main() {
     _help
     exit 1;
   fi
-  local dry_run
-  if [[ "$#" == 2 ]] && [[ "--dry-run" == "$2" ]]; then
-    dry_run=true
-  fi
 
   # Get (most recent) PR Id associated with the current branch.
   #

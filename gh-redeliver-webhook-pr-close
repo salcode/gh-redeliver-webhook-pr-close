@@ -18,6 +18,10 @@ FLAGS
 EOF
 }
 
+_get_pr_id() {
+  gh pr view --json number --jq '.number'
+}
+
 main() {
   local positional_args=""
 
@@ -57,7 +61,7 @@ main() {
   # Note: Even if the branch name has multiple PRs associated with it,
   # (e.g. one PR into develop and one into main both from this branch)
   # only the most recent (highest) PR ID is returned.
-  PR_ID=$(gh pr view --json number --jq '.number');
+  PR_ID=$(_get_pr_id);
 
   # Get ID associated with Webhook URL.
   WEBHOOK_ID=$(gh api "/repos/{owner}/{repo}/hooks" --jq ".[] | select(.config.url==\"$1\") | .id");

@@ -32,6 +32,10 @@ main() {
         # flag --dry-run
         local dry_run=true
         ;;
+      --*|-* )
+        echo "Error: Unsupported option '${1:-}'. Use --help for usage information." >&2
+        exit 1
+        ;;
       *)
         # Not a flag nor parameter, must be positional argument.
         positional_args="$positional_args '$1'"

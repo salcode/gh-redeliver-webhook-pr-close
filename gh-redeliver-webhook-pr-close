@@ -32,7 +32,7 @@ main() {
         _help
         exit 0;
         ;;
-      --dry-run|-dry-run)
+      --dry-run)
         # flag --dry-run
         local dry_run=true
         ;;

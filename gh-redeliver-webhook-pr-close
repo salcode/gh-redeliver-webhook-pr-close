@@ -30,7 +30,7 @@ main() {
       --help|-h)
         # flag --help or -h
         _help
-        exit 1;
+        exit 0;
         ;;
       --dry-run|-dry-run)
         # flag --dry-run

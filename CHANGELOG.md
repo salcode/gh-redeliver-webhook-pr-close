@@ -1,7 +1,7 @@
 # Changelog
 
 ## Unreleased
-- Refactor code (specifically option and argument parsing). [#2](https://github.com/salcode/gh-redeliver-webhook-pr-close/issues/2)
+- Refactor code (specifically option and argument parsing) ([#2](https://github.com/salcode/gh-redeliver-webhook-pr-close/issues/2))
 
 ## [0.1.2] - 2025-05-26
 - Add check to avoid `line 60: $2: unbound variable` error

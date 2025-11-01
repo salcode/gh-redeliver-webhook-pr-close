@@ -23,7 +23,7 @@ _get_pr_id() {
 }
 
 main() {
-  local positional_args=""
+  local -a positional_args
 
   while (( "$#" )); do
     case "${1-}" in
@@ -42,14 +42,16 @@ main() {
         ;;
       *)
         # Not a flag nor parameter, must be positional argument.
-        positional_args="$positional_args '$1'"
+        positional_args+=("$1")
     esac
     shift
   done
 
-  # Update positional arguments to exclude options.
-  eval set -- "$positional_args"
+  # Pass positional arguments (and exclude options).
+  _command ${positional_args[@]+"${positional_args[@]}"}
+}
 
+_command() {
   if [[ "$#" == 0 ]]; then
     # No position arguments given.
     _help

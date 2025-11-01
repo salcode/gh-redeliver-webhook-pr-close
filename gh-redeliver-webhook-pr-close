@@ -53,7 +53,7 @@ main() {
 
 _command() {
   if [[ "$#" == 0 ]]; then
-    # No position arguments given.
+    # No positional arguments given.
     _help
     exit 1;
   fi
